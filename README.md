@@ -21,14 +21,14 @@ A Model Context Protocol (MCP) server for managing Okta applications, users, and
 npm install -g @indranilokg/okta-mcp-server
 
 # Or use with npx (no installation needed)
-npx @indranilokg/okta-mcp-server init
+npx oktamcp init
 ```
 
 ### Step 2: Authenticate with Okta
 
 ```bash
 # Interactive setup (recommended)
-okta-mcp-server init
+oktamcp init
 
 # Follow the prompts:
 # - Enter your Okta domain (e.g., dev-123456.okta.com)
@@ -49,28 +49,24 @@ okta-mcp-server init
 
 ```bash
 # Check your authentication status
-okta-mcp-server session
+oktamcp session
 
 # Test the server
-okta-mcp-server run
+oktamcp run
 ```
 
 ## Usage
 
 ### With Cursor IDE
 
-After running `okta-mcp-server init`, add this to your `~/.cursor/mcp.json`:
+After running `oktamcp init`, add this to your `~/.cursor/mcp.json`:
 
 ```json
 {
   "mcpServers": {
     "okta-admin": {
       "command": "npx",
-      "args": [
-        "-y",
-        "@indranilokg/okta-mcp-server",
-        "run"
-      ]
+      "args": ["-y", "oktamcp", "run"]
     }
   }
 }
@@ -82,22 +78,22 @@ After running `okta-mcp-server init`, add this to your `~/.cursor/mcp.json`:
 
 ```bash
 # Initial setup (interactive)
-okta-mcp-server init
+oktamcp init
 
 # Start in stdio mode (default)
-okta-mcp-server run
+oktamcp run
 
 # Start in SSE mode for web interfaces
-okta-mcp-server run --sse
+oktamcp run --sse
 
 # Check authentication status
-okta-mcp-server session
+oktamcp session
 
 # Clear stored credentials
-okta-mcp-server logout
+oktamcp logout
 
 # Show help
-okta-mcp-server --help
+oktamcp --help
 ```
 
 ## Available Tools
@@ -195,19 +191,19 @@ Similar to Auth0 MCP Server:
 ### **Security Commands**
 ```bash
 # Secure setup (stores in keychain)
-okta-mcp-server init
+oktamcp init
 
 # Check session and credential validity
-okta-mcp-server session
+oktamcp session
 
 # Securely clear credentials from keychain
-okta-mcp-server logout
+oktamcp logout
 ```
 
 ### **Credential Flow**
-1. **Setup**: `okta-mcp-server init` → Tries keychain first, falls back to secure file
+1. **Setup**: `oktamcp init` → Tries keychain first, falls back to secure file
 2. **Runtime**: Server automatically retrieves using fallback chain (keychain → file → env)
-3. **Cleanup**: `okta-mcp-server logout` → Clears from all storage locations
+3. **Cleanup**: `oktamcp logout` → Clears from all storage locations
 
 ### **Storage Location Examples**
 - **Keychain**: OS credential store (invisible to user)
