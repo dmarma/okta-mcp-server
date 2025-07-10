@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Okta MCP SSE Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        #output { 
+            background: #f5f5f5; 
+            padding: 15px; 
+            border-radius: 8px;
+            white-space: pre-wrap;
+            margin: 10px 0;
+            max-height: 500px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.4;
+            border: 1px solid #ddd;
+        }
+        button { margin: 5px; padding: 8px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .error { color: red; }
+        .success { color: green; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Okta MCP SSE Test</h1>
+        
+        <div>
+            <h3>Connection Status: <span id="status">Disconnected</span></h3>
+            <button onclick="connect()">Connect SSE</button>
+            <button onclick="disconnect()">Disconnect</button>
+            <button onclick="clearOutput()">Clear Output</button>
+        </div>
+
+        <div>
+            <h3>Test Actions</h3>
+            <button onclick="listApplications()">List Applications</button>
+            <button onclick="createApplication()">Create Test Application</button>
+            <button onclick="retrieveApplication()">Retrieve Application</button>
+            <button onclick="deleteApplication()">Delete Application</button>
+        </div>
+
+        <h3>Output:</h3>
+        <div id="output"></div>
+    </div>
+
+    <script>
+        let eventSource;
+        let sessionId;
+        let reconnectAttempts = 0;
+        const MAX_RECONNECT_ATTEMPTS = 3;
+        const MCP_SERVER = 'http://localhost:3001';
+
+        function updateStatus(text, isError = false) {
+            const status = document.getElementById('status');
+            status.textContent = text;
+            status.className = isError ? 'error' : 'success';
+        }
+
+        function disconnect() {
+            if (eventSource) {
+                eventSource.close();
+                eventSource = null;
+                sessionId = null;
+                reconnectAttempts = 0;
+                updateStatus('Disconnected', true);
+                appendOutput('Disconnected from SSE server');
+            }
+        }
+
+        function connect() {
+            disconnect(); // Clean up any existing connection
+
+            updateStatus('Connecting...');
+            eventSource = new EventSource(`${MCP_SERVER}/sse`);
+
+            eventSource.onopen = () => {
+                reconnectAttempts = 0;
+                appendOutput('SSE Connection opened');
+            };
+
+            eventSource.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    if (data.type === 'connection') {
+                        sessionId = data.sessionId;
+                        updateStatus(`Connected (Session: ${sessionId})`);
+                        appendOutput(`Connected with session ID: ${sessionId}`);
+                    } else if (data.result && data.result.content) {
+                        // Handle tool call responses with formatting
+                        try {
+                            const content = data.result.content[0];
+                            if (content.type === 'text') {
+                                // Parse the JSON string from the tool response
+                                const parsedContent = JSON.parse(content.text);
+                                
+                                // Format the response nicely
+                                if (Array.isArray(parsedContent)) {
+                                    appendOutput(`Found ${parsedContent.length} applications:`);
+                                    parsedContent.forEach((app, index) => {
+                                        appendOutput(`\n--- Application ${index + 1} ---`);
+                                        appendOutput(`ID: ${app.id}`);
+                                        appendOutput(`Name: ${app.name}`);
+                                        appendOutput(`Label: ${app.label}`);
+                                        appendOutput(`Status: ${app.status}`);
+                                        appendOutput(`Sign On Mode: ${app.signOnMode}`);
+                                        appendOutput(`Created: ${app.created}`);
+                                        appendOutput(`Last Updated: ${app.lastUpdated}`);
+                                    });
+                                } else {
+                                    appendOutput('Tool Response: ' + JSON.stringify(parsedContent, null, 2));
+                                }
+                            } else {
+                                appendOutput('Tool Response: ' + JSON.stringify(content, null, 2));
+                            }
+                        } catch (parseError) {
+                            appendOutput('Parse Error: ' + parseError.message);
+                            appendOutput('Raw Tool Response: ' + JSON.stringify(data.result.content, null, 2));
+                        }
+                    } else {
+                        appendOutput('Received: ' + JSON.stringify(data, null, 2));
+                    }
+                } catch (error) {
+                    appendOutput('Error parsing message: ' + event.data);
+                }
+            };
+
+            eventSource.onerror = (error) => {
+                if (eventSource.readyState === EventSource.CLOSED) {
+                    updateStatus('Disconnected', true);
+                    appendOutput('SSE Connection closed');
+                    
+                    // Try to reconnect if we haven't exceeded max attempts
+                    if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+                        reconnectAttempts++;
+                        updateStatus(`Reconnecting (Attempt ${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS})...`, true);
+                        appendOutput(`Attempting to reconnect (${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS})`);
+                        setTimeout(connect, 2000); // Wait 2 seconds before reconnecting
+                    } else {
+                        disconnect();
+                        appendOutput('Max reconnection attempts reached. Please try connecting manually.');
+                    }
+                } else {
+                    updateStatus('Connection Error', true);
+                    appendOutput('SSE Error: ' + (error.message || 'Unknown error'));
+                }
+            };
+        }
+
+        async function sendCommand(method, params) {
+            if (!sessionId || !eventSource || eventSource.readyState !== EventSource.OPEN) {
+                updateStatus('Not Connected', true);
+                appendOutput('Error: Not connected. Click "Connect SSE" first.');
+                return;
+            }
+
+            try {
+                appendOutput(`Sending command: ${method} with params: ${JSON.stringify(params)}`);
+                const response = await fetch(`${MCP_SERVER}/messages?sessionId=${sessionId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        jsonrpc: '2.0',
+                        method: 'tools/call',
+                        params: {
+                            name: method,
+                            arguments: params || {}
+                        },
+                        id: Date.now()
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                if (data.error) {
+                    appendOutput('Error Response: ' + JSON.stringify(data.error, null, 2));
+                } else if (data.result && data.result.content) {
+                    try {
+                        const content = data.result.content[0];
+                        if (content.type === 'text') {
+                            // Parse the JSON string from the tool response
+                            const parsedContent = JSON.parse(content.text);
+                            
+                            // Format the response nicely
+                            if (Array.isArray(parsedContent)) {
+                                appendOutput(`Found ${parsedContent.length} applications:`);
+                                parsedContent.forEach((app, index) => {
+                                    appendOutput(`\n--- Application ${index + 1} ---`);
+                                    appendOutput(`ID: ${app.id}`);
+                                    appendOutput(`Name: ${app.name}`);
+                                    appendOutput(`Label: ${app.label}`);
+                                    appendOutput(`Status: ${app.status}`);
+                                    appendOutput(`Sign On Mode: ${app.signOnMode}`);
+                                    appendOutput(`Created: ${app.created}`);
+                                    appendOutput(`Last Updated: ${app.lastUpdated}`);
+                                });
+                            } else {
+                                appendOutput('Response: ' + JSON.stringify(parsedContent, null, 2));
+                            }
+                        } else {
+                            appendOutput('Response: ' + JSON.stringify(content, null, 2));
+                        }
+                    } catch (parseError) {
+                        appendOutput('Parse Error: ' + parseError.message);
+                        appendOutput('Raw Response: ' + JSON.stringify(data.result.content, null, 2));
+                    }
+                } else {
+                    appendOutput('Response: ' + JSON.stringify(data, null, 2));
+                }
+            } catch (error) {
+                appendOutput('Error sending command: ' + error.message);
+                updateStatus('Error', true);
+            }
+        }
+
+        function listApplications() {
+            sendCommand('list_all_applications', {});
+        }
+
+        function createApplication() {
+            sendCommand('create_an_application', {
+                name: 'test-app-' + Date.now(),
+                label: 'Test Application',
+                signOnMode: 'OPENID_CONNECT',
+                url: 'https://example.com'
+            });
+        }
+
+        function retrieveApplication() {
+            const searchType = prompt('Search by:\n1. App ID\n2. App Name\n3. App Label\n4. Sign-on Mode\n\nEnter 1, 2, 3, or 4:');
+            
+            if (searchType === '1') {
+                const appId = prompt('Enter Application ID:');
+                if (appId) {
+                    sendCommand('retrieve_application', { appId });
+                }
+            } else if (searchType === '2') {
+                const name = prompt('Enter Application Name (partial match):');
+                if (name) {
+                    sendCommand('retrieve_application', { name });
+                }
+            } else if (searchType === '3') {
+                const label = prompt('Enter Application Label (partial match):');
+                if (label) {
+                    sendCommand('retrieve_application', { label });
+                }
+            } else if (searchType === '4') {
+                const signOnMode = prompt('Enter Sign-on Mode (e.g., OPENID_CONNECT, SAML_2_0):');
+                if (signOnMode) {
+                    sendCommand('retrieve_application', { signOnMode });
+                }
+            } else {
+                alert('Invalid selection. Please try again.');
+            }
+        }
+
+        function deleteApplication() {
+            const appId = prompt('Enter Application ID to delete:');
+            if (appId) {
+                sendCommand('delete_an_application', {
+                    appId: appId
+                });
+            }
+        }
+
+        function appendOutput(message) {
+            const output = document.getElementById('output');
+            const timestamp = new Date().toISOString();
+            const formattedMessage = `${timestamp}: ${message}`;
+            output.innerHTML = formattedMessage + '\n' + output.innerHTML;
+        }
+
+        function clearOutput() {
+            document.getElementById('output').innerHTML = '';
+        }
+    </script>
+</body>
+</html> 

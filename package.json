@@ -1,0 +1,53 @@
+{
+  "name": "@indranilokg/okta-mcp-server",
+  "version": "1.0.0",
+  "description": "Okta MCP (Model Context Protocol) server for managing Okta applications, users, and groups",
+  "main": "mcpServer.js",
+  "bin": {
+    "okta-mcp-server": "./mcpServer.js"
+  },
+  "type": "module",
+  "scripts": {
+    "start": "node mcpServer.js",
+    "start:sse": "node mcpServer.js --sse",
+    "list-tools": "node index.js tools",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "okta",
+    "identity",
+    "oauth",
+    "oidc",
+    "applications",
+    "users",
+    "groups"
+  ],
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.9.0",
+    "commander": "^13.1.0",
+    "dotenv": "^16.4.7",
+    "express": "^5.1.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "author": "Indranil Ghosh <your-email@example.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/indranilokg/okta-mcp-server.git"
+  },
+  "bugs": {
+    "url": "https://github.com/indranilokg/okta-mcp-server/issues"
+  },
+  "homepage": "https://github.com/indranilokg/okta-mcp-server#readme",
+  "files": [
+    "mcpServer.js",
+    "lib/",
+    "tools/",
+    "commands/",
+    "README.md"
+  ]
+}
