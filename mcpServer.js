@@ -53,7 +53,7 @@ if (args.includes("init")) {
 Okta MCP Server
 
 Usage:
-  okta-mcp-server <command> [options]
+  oktamcp <command> [options]
 
 Commands:
   init               Initialize authentication with Okta
@@ -67,22 +67,22 @@ Options:
   --help, -h         Show this help message
 
 Setup:
-  1. Run 'okta-mcp-server init' to authenticate
+  1. Run 'oktamcp init' to authenticate
   2. Add to your mcp.json without any credentials:
      {
        "mcpServers": {
          "okta-admin": {
            "command": "npx",
-           "args": ["-y", "@indranilokg/okta-mcp-server", "run"]
+           "args": ["-y", "oktamcp", "run"]
          }
        }
      }
 
 Examples:
-  okta-mcp-server init
-  okta-mcp-server run
-  okta-mcp-server session
-  okta-mcp-server logout
+  oktamcp init
+  oktamcp run
+  oktamcp session
+  oktamcp logout
 `);
   process.exit(0);
 }

@@ -1,7 +1,11 @@
-# Node modules
+# Logs
+*.log
+
+# Dependency directories
 node_modules/
 
 # Environment variables
 .env*
 
-indranilokg-okta-mcp-server-1.1.0.tgz
+# Package testing files
+*.tgz
