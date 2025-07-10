@@ -24,7 +24,7 @@ const executeFunction = async ({
     throw new Error('OKTA_DOMAIN environment variable is not set');
   }
   const baseUrl = `https://${process.env.OKTA_DOMAIN}`;
-  const apiToken = process.env.OKTA_PUBLIC_API_COLLECTIONS_API_KEY;
+  const apiToken = process.env.OKTA_API_KEY;
 
   try {
     // Construct the URL with query parameters

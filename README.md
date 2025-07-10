@@ -36,13 +36,13 @@ You need to set the following environment variables:
 
 ```bash
 export OKTA_DOMAIN="your-domain.okta.com"
-export OKTA_PUBLIC_API_COLLECTIONS_API_KEY="your-api-token"
+export OKTA_API_KEY="your-api-token"
 ```
 
 Or create a `.env` file:
 ```
 OKTA_DOMAIN=your-domain.okta.com
-OKTA_PUBLIC_API_COLLECTIONS_API_KEY=your-api-token
+OKTA_API_KEY=your-api-token
 ```
 
 ### Getting Your Okta API Token
@@ -73,7 +73,7 @@ Add this to your `~/.cursor/mcp.json`:
       ],
       "env": {
         "OKTA_DOMAIN": "your-domain.okta.com",
-        "OKTA_PUBLIC_API_COLLECTIONS_API_KEY": "your-api-token"
+        "OKTA_API_KEY": "your-api-token"
       }
     }
   }

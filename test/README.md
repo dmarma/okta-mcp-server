@@ -50,5 +50,5 @@ A simple web-based client for testing the Server-Sent Events (SSE) mode of the M
 Make sure you have set up your environment variables in `.env`:
 ```
 OKTA_DOMAIN=your-org.okta.com
-OKTA_PUBLIC_API_COLLECTIONS_API_KEY=your-api-key
+OKTA_API_KEY=your-api-key
 ``` 

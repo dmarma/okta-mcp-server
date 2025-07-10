@@ -46,8 +46,8 @@ Options:
   --help, -h         Show this help message
 
 Environment Variables:
-  OKTA_DOMAIN                          Your Okta domain (e.g., dev-123456.okta.com)
-  OKTA_PUBLIC_API_COLLECTIONS_API_KEY  Your Okta API token
+  OKTA_DOMAIN    Your Okta domain (e.g., dev-123456.okta.com)
+  OKTA_API_KEY   Your Okta API token
 
 Examples:
   okta-mcp-server
