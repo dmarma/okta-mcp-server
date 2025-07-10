@@ -83,11 +83,10 @@ const executeFunction = async ({
   console.log('Final redirectUris:', redirectUris);
   console.log('Final postLogoutRedirectUris:', postLogoutRedirectUris);
 
-  if (!process.env.OKTA_DOMAIN) {
-    throw new Error('OKTA_DOMAIN environment variable is not set');
-  }
-  const baseUrl = `https://${process.env.OKTA_DOMAIN}`;
-  const apiToken = process.env.OKTA_API_KEY;
+  // Import credentials helper
+  const { getOktaCredentials } = await import('../../lib/tools.js');
+  const { domain, apiToken } = await getOktaCredentials();
+  const baseUrl = `https://${domain}`;
 
   // Validate application type
   const validAppTypes = ['native', 'web', 'spa', 'service'];

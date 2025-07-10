@@ -9,11 +9,10 @@
  * @returns {Promise<Object>} - The result of the assignment operation.
  */
 const executeFunction = async ({ appId, groupId, priority, profile = {} }) => {
-  if (!process.env.OKTA_DOMAIN) {
-    throw new Error('OKTA_DOMAIN environment variable is not set');
-  }
-  const baseUrl = `https://${process.env.OKTA_DOMAIN}`;
-  const apiToken = process.env.OKTA_API_KEY;
+  // Import credentials helper
+  const { getOktaCredentials } = await import('../../lib/tools.js');
+  const { domain, apiToken } = await getOktaCredentials();
+  const baseUrl = `https://${domain}`;
 
   // Validate required parameters
   if (!appId) {

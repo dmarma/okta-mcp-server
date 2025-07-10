@@ -15,6 +15,15 @@ import { discoverTools } from "./lib/tools.js";
 
 import path from "path";
 import { fileURLToPath } from "url";
+import { 
+  storeCredentials, 
+  getCredentials, 
+  getSessionInfo, 
+  clearCredentials, 
+  validateCredentials,
+  isKeychainAvailable,
+  getStorageInfo
+} from "./lib/credentials.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -26,35 +35,203 @@ const SERVER_NAME = "okta-mcp-server";
 // CLI argument parsing
 const args = process.argv.slice(2);
 const isSSE = args.includes("--sse");
-const runCommand = args.includes("run");
+const runCommand = args.includes("run") || (!args.includes("init") && !args.includes("session") && !args.includes("logout"));
 const toolsFilter = args.includes("--tools") ? args[args.indexOf("--tools") + 1] : "*";
 
-// Handle help command
-if (args.includes("--help") || args.includes("-h")) {
+// Handle different commands
+if (args.includes("init")) {
+  await initCommand();
+  process.exit(0);
+} else if (args.includes("session")) {
+  await sessionCommand();
+  process.exit(0);
+} else if (args.includes("logout")) {
+  await logoutCommand();
+  process.exit(0);
+} else if (args.includes("--help") || args.includes("-h")) {
   console.log(`
 Okta MCP Server
 
 Usage:
-  okta-mcp-server [run] [options]
+  okta-mcp-server <command> [options]
 
 Commands:
-  run                 Start the MCP server (default if no command specified)
+  init               Initialize authentication with Okta
+  run                Start the MCP server (default)
+  session            Show current authentication status
+  logout             Clear stored credentials
 
 Options:
   --sse              Start in SSE mode instead of stdio
   --tools <filter>   Tool filter pattern (default: "*" for all tools)
   --help, -h         Show this help message
 
-Environment Variables:
-  OKTA_DOMAIN    Your Okta domain (e.g., dev-123456.okta.com)
-  OKTA_API_KEY   Your Okta API token
+Setup:
+  1. Run 'okta-mcp-server init' to authenticate
+  2. Add to your mcp.json without any credentials:
+     {
+       "mcpServers": {
+         "okta-admin": {
+           "command": "npx",
+           "args": ["-y", "@indranilokg/okta-mcp-server", "run"]
+         }
+       }
+     }
 
 Examples:
-  okta-mcp-server
-  okta-mcp-server run --sse
-  okta-mcp-server run --tools "*"
+  okta-mcp-server init
+  okta-mcp-server run
+  okta-mcp-server session
+  okta-mcp-server logout
 `);
   process.exit(0);
+}
+
+// Initialize authentication
+async function initCommand() {
+  console.log('🔐 Okta MCP Server Authentication Setup\n');
+  
+  // Check available storage methods
+  const storageInfo = await getStorageInfo();
+  console.log('📋 Available credential storage methods:');
+  console.log(`   🔑 Keychain: ${storageInfo.keychain ? '✅ Available' : '❌ Not available'}`);
+  console.log(`   📁 File: ${storageInfo.file ? '✅ Available' : '❌ Not available'}`);
+  console.log(`   🌍 Environment: ${storageInfo.environment ? '✅ Available' : '❌ Not available'}`);
+  console.log(`\n🎯 Will use: ${storageInfo.preferred} storage\n`);
+  
+  // Check for existing credentials
+  const existingCredentials = await getCredentials();
+  if (existingCredentials) {
+    console.log('📋 Found existing credentials for:', existingCredentials.domain);
+    process.stdout.write('Do you want to update them? (y/N): ');
+    const answer = await getUserInput();
+    if (answer.toLowerCase() !== 'y' && answer.toLowerCase() !== 'yes') {
+      console.log('✨ Using existing credentials. Run: okta-mcp-server run');
+      return;
+    }
+  }
+  
+  // Prompt for Okta domain
+  console.log('\nPlease provide your Okta configuration:');
+  process.stdout.write('Okta Domain (e.g., dev-123456.okta.com): ');
+  
+  const domain = await getUserInput();
+  if (!domain) {
+    console.error('❌ Domain is required');
+    process.exit(1);
+  }
+  
+  // Prompt for API token
+  process.stdout.write('Okta API Token: ');
+  const apiToken = await getUserInput();
+  if (!apiToken) {
+    console.error('❌ API token is required');
+    process.exit(1);
+  }
+  
+  // Test the credentials
+  console.log('\n🔍 Testing credentials...');
+  try {
+    const response = await fetch(`https://${domain}/api/v1/apps?limit=1`, {
+      headers: {
+        'Authorization': `SSWS ${apiToken}`,
+        'Accept': 'application/json'
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    
+    console.log('✅ Credentials validated successfully!');
+    
+    // Store credentials securely in keychain
+    await storeCredentials(domain, apiToken);
+    console.log('\n✨ Setup complete! You can now run: okta-mcp-server run');
+    
+  } catch (error) {
+    console.error('❌ Failed to validate/store credentials:', error.message);
+    process.exit(1);
+  }
+}
+
+// Show session information
+async function sessionCommand() {
+  try {
+    const sessionInfo = await getSessionInfo();
+    
+    if (!sessionInfo) {
+      console.log('❌ No active session. Run: okta-mcp-server init');
+      process.exit(1);
+    }
+    
+    console.log('✅ Active Okta MCP Session');
+    console.log(`📋 Domain: ${sessionInfo.domain}`);
+    console.log(`🕐 Created: ${new Date(sessionInfo.createdAt).toLocaleString()}`);
+    console.log(`📦 Version: ${sessionInfo.version}`);
+    
+    // Show actual storage method
+    const storageDisplay = {
+      'keychain': '🔑 System Keychain',
+      'file': '📁 Secure File',
+      'environment': '🌍 Environment Variables'
+    };
+    console.log(`💾 Storage: ${storageDisplay[sessionInfo.storage] || sessionInfo.storage}`);
+    
+    // Test if token is still valid
+    console.log('\n🔍 Testing token validity...');
+    const isValid = await validateCredentials();
+    
+    if (isValid) {
+      console.log('🟢 Token Status: Valid');
+    } else {
+      console.log('🔴 Token Status: Invalid (run init to re-authenticate)');
+    }
+    
+  } catch (error) {
+    console.error('❌ Error checking session:', error.message);
+    process.exit(1);
+  }
+}
+
+// Logout and clear credentials
+async function logoutCommand() {
+  try {
+    const hadCredentials = await clearCredentials();
+    
+    if (hadCredentials) {
+      console.log('✅ Logged out successfully. Credentials cleared from all storage locations.');
+    } else {
+      console.log('ℹ️ No active session to logout from.');
+    }
+  } catch (error) {
+    console.error('❌ Error clearing credentials:', error.message);
+    process.exit(1);
+  }
+}
+
+// Helper function to get user input
+async function getUserInput() {
+  return new Promise((resolve) => {
+    process.stdin.resume();
+    process.stdin.setEncoding('utf8');
+    process.stdin.once('data', (data) => {
+      process.stdin.pause();
+      resolve(data.toString().trim());
+    });
+  });
+}
+
+// Load credentials from keychain or environment variables
+async function loadCredentials() {
+  const credentials = await getCredentials();
+  
+  if (!credentials) {
+    console.error('❌ No credentials found. Run: okta-mcp-server init');
+    process.exit(1);
+  }
+  
+  return credentials;
 }
 
 async function transformTools(tools) {
@@ -141,6 +318,10 @@ async function setupServerHandlers(server, tools) {
 
 async function run() {
   console.log('[MCP] Starting server in', isSSE ? 'SSE' : 'stdio', 'mode');
+  
+  // Load credentials
+  const credentials = await loadCredentials();
+  console.log(`[MCP] Connected to Okta domain: ${credentials.domain}`);
   
   const tools = await discoverTools();
   console.log('[MCP] Loaded tools:', tools.map(t => t.definition?.function?.name));
