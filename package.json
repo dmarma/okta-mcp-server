@@ -33,7 +33,7 @@
   "engines": {
     "node": ">=16.0.0"
   },
-  "author": "Indranil Ghosh <your-email@example.com>",
+  "author": "Indranil Jha <indranilokg@gmail.com>",
   "license": "MIT",
   "repository": {
     "type": "git",
