@@ -106,8 +106,8 @@ const executeFunction = async ({
     case 'native':
       defaultGrantTypes = ['authorization_code', 'refresh_token'];
       defaultResponseTypes = ['code'];
-      defaultTokenAuthMethod = 'none'; // Public client
-      defaultPkceRequired = true;
+      defaultTokenAuthMethod = 'client_secret_basic'; // Same as web
+      defaultPkceRequired = false; // Same as web
       break;
     case 'web':
       defaultGrantTypes = ['authorization_code', 'refresh_token'];
