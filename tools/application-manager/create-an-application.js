@@ -142,11 +142,17 @@ const executeFunction = async ({
   let requestBody;
   
   if (applicationType === 'spa') {
-    // Special handling for SPA applications based on working examples
+    // Special handling for SPA applications - include credentials in initial POST
     requestBody = {
       name: 'oidc_client',
       label: label,
       signOnMode: 'OPENID_CONNECT',
+      credentials: {
+        oauthClient: {
+          token_endpoint_auth_method: finalTokenAuthMethod,
+          pkce_required: finalPkceRequired
+        }
+      },
       settings: {
         oauthClient: {
           client_uri: null,
@@ -167,11 +173,17 @@ const executeFunction = async ({
     }
     
   } else if (applicationType === 'web') {
-    // Special handling for web applications based on working demo-web-app structure
+    // Special handling for web applications - include credentials in initial POST
     requestBody = {
       name: 'oidc_client',
       label: label,
       signOnMode: 'OPENID_CONNECT',
+      credentials: {
+        oauthClient: {
+          token_endpoint_auth_method: finalTokenAuthMethod,
+          pkce_required: finalPkceRequired
+        }
+      },
       settings: {
         oauthClient: {
           client_uri: null,
@@ -192,11 +204,17 @@ const executeFunction = async ({
     }
     
   } else if (applicationType === 'native') {
-    // Special handling for native applications based on working demo-native structure
+    // Special handling for native applications - include credentials in initial POST
     requestBody = {
       name: 'oidc_client',
       label: label,
       signOnMode: 'OPENID_CONNECT',
+      credentials: {
+        oauthClient: {
+          token_endpoint_auth_method: finalTokenAuthMethod,
+          pkce_required: finalPkceRequired
+        }
+      },
       settings: {
         oauthClient: {
           client_uri: null,
@@ -261,76 +279,8 @@ const executeFunction = async ({
     }
 
     const data = await response.json();
-    
-    // If it's a SPA, web app, or native app, we need to update it with additional settings that can't be set during creation
-    if (applicationType === 'spa' || applicationType === 'web' || applicationType === 'native') {
-      try {
-        let updateBody;
-        if (applicationType === 'spa') {
-          updateBody = {
-            credentials: {
-              oauthClient: {
-                token_endpoint_auth_method: finalTokenAuthMethod,
-                pkce_required: finalPkceRequired
-              }
-            },
-            settings: {
-              oauthClient: {
-                idp_initiated_login: {
-                  mode: 'DISABLED',
-                  default_scope: []
-                },
-                wildcard_redirect: 'DISABLED',
-                dpop_bound_access_tokens: false,
-                participate_slo: false
-              }
-            }
-          };
-        } else if (applicationType === 'web') {
-          updateBody = {
-            credentials: {
-              oauthClient: {
-                token_endpoint_auth_method: finalTokenAuthMethod,
-                pkce_required: finalPkceRequired
-              }
-            }
-          };
-        } else if (applicationType === 'native') {
-          updateBody = {
-            credentials: {
-              oauthClient: {
-                token_endpoint_auth_method: finalTokenAuthMethod,
-                pkce_required: finalPkceRequired
-              }
-            }
-          };
-        }
-        
-        console.log('About to update SPA with body:', JSON.stringify(updateBody, null, 2));
-        const updateResponse = await fetch(`${baseUrl}/api/v1/apps/${data.id}`, {
-          method: 'PUT',
-          headers: {
-            'Authorization': `SSWS ${apiToken}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(updateBody)
-        });
-
-        console.log('Update response status:', updateResponse.status);
-        if (updateResponse.ok) {
-          const updatedData = await updateResponse.json();
-          console.log(`${applicationType.toUpperCase()} successfully updated with additional settings`);
-          console.log('Updated credentials:', JSON.stringify(updatedData.credentials?.oauthClient, null, 2));
-          data.settings = updatedData.settings; // Update with the latest settings
-          data.credentials = updatedData.credentials; // Update with the latest credentials
-        } else {
-          const errorText = await updateResponse.text();
-          console.error('Update failed:', updateResponse.status, errorText);
-        }
-      } catch (updateError) {
-        console.warn('Warning: Failed to update SPA with additional settings:', updateError.message);
-      }
-    }
+    console.log('✅ Application created successfully with credentials in initial POST');
+    console.log('Final credentials:', JSON.stringify(data.credentials?.oauthClient, null, 2));
     
     // Return useful information about the created app
     return {

@@ -1,6 +1,6 @@
 {
   "name": "@indranilokg/okta-mcp-server",
-  "version": "1.1.6",
+  "version": "1.1.7",
   "description": "Okta MCP (Model Context Protocol) server for managing Okta applications, users, and groups",
   "main": "mcpServer.js",
   "bin": {
