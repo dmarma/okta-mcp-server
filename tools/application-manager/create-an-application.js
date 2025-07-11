@@ -268,10 +268,14 @@ const executeFunction = async ({
         let updateBody;
         if (applicationType === 'spa') {
           updateBody = {
-            settings: {
+            credentials: {
               oauthClient: {
                 token_endpoint_auth_method: finalTokenAuthMethod,
-                pkce_required: finalPkceRequired,
+                pkce_required: finalPkceRequired
+              }
+            },
+            settings: {
+              oauthClient: {
                 idp_initiated_login: {
                   mode: 'DISABLED',
                   default_scope: []
@@ -284,7 +288,7 @@ const executeFunction = async ({
           };
         } else if (applicationType === 'web') {
           updateBody = {
-            settings: {
+            credentials: {
               oauthClient: {
                 token_endpoint_auth_method: finalTokenAuthMethod,
                 pkce_required: finalPkceRequired
@@ -293,7 +297,7 @@ const executeFunction = async ({
           };
         } else if (applicationType === 'native') {
           updateBody = {
-            settings: {
+            credentials: {
               oauthClient: {
                 token_endpoint_auth_method: finalTokenAuthMethod,
                 pkce_required: finalPkceRequired
@@ -302,20 +306,26 @@ const executeFunction = async ({
           };
         }
         
+        console.log('About to update SPA with body:', JSON.stringify(updateBody, null, 2));
         const updateResponse = await fetch(`${baseUrl}/api/v1/apps/${data.id}`, {
           method: 'PUT',
           headers: {
             'Authorization': `SSWS ${apiToken}`,
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
+            'Content-Type': 'application/json'
           },
           body: JSON.stringify(updateBody)
         });
-        
+
+        console.log('Update response status:', updateResponse.status);
         if (updateResponse.ok) {
           const updatedData = await updateResponse.json();
           console.log(`${applicationType.toUpperCase()} successfully updated with additional settings`);
+          console.log('Updated credentials:', JSON.stringify(updatedData.credentials?.oauthClient, null, 2));
           data.settings = updatedData.settings; // Update with the latest settings
+          data.credentials = updatedData.credentials; // Update with the latest credentials
+        } else {
+          const errorText = await updateResponse.text();
+          console.error('Update failed:', updateResponse.status, errorText);
         }
       } catch (updateError) {
         console.warn('Warning: Failed to update SPA with additional settings:', updateError.message);
@@ -330,14 +340,14 @@ const executeFunction = async ({
       status: data.status,
       signOnMode: data.signOnMode,
       applicationType: data.settings?.oauthClient?.application_type,
-      clientId: data.settings?.oauthClient?.client_id,
-      clientSecret: data.settings?.oauthClient?.client_secret,
+      clientId: data.credentials?.oauthClient?.client_id,
+      clientSecret: data.credentials?.oauthClient?.client_secret,
       grantTypes: data.settings?.oauthClient?.grant_types,
       responseTypes: data.settings?.oauthClient?.response_types,
       redirectUris: data.settings?.oauthClient?.redirect_uris,
       postLogoutRedirectUris: data.settings?.oauthClient?.post_logout_redirect_uris,
-      tokenEndpointAuthMethod: data.settings?.oauthClient?.token_endpoint_auth_method,
-      pkceRequired: data.settings?.oauthClient?.pkce_required,
+      tokenEndpointAuthMethod: data.credentials?.oauthClient?.token_endpoint_auth_method,
+      pkceRequired: data.credentials?.oauthClient?.pkce_required,
       created: data.created,
       _links: data._links
     };
