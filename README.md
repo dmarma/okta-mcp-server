@@ -1,221 +1,115 @@
 # Okta MCP Server
 
-A Model Context Protocol (MCP) server for managing Okta applications, users, and groups. This server provides tools to interact with Okta's management APIs through the MCP protocol.
+A Model Context Protocol (MCP) server for managing Okta platform.
 
-## Features
+## Quick Start
 
-- **Application Management**: Create and manage OIDC applications (native, web, SPA, service)
-- **Group Management**: List groups and assign applications to groups
-- **User Management**: Manage user assignments and group memberships
-- **Multiple App Types**: Support for all Okta application types with proper OAuth configurations
-- **🔐 Three-Tier Security**: Automatic fallback from keychain → file → environment variables
-- **🛡️ Universal Compatibility**: Works on any system with graceful security degradation
-- **🔒 Zero-Config MCP**: No credentials needed in mcp.json configuration
-
-## Installation & Setup
-
-### Step 1: Install & Initialize
+### 1. Initialize & Configure
 
 ```bash
-# Install globally
-npm install -g @indranilokg/okta-mcp-server
-
-# Or use with npx (no installation needed)
-npx oktamcp init
+# Setup with your Okta credentials (interactive)
+npx @indranilokg/okta-mcp-server init
 ```
 
-### Step 2: Authenticate with Okta
+You'll be prompted for:
+- **Okta Domain**: `your-domain.okta.com` (or `.oktapreview.com`)
+- **API Token**: Get from Okta Admin → Security → API → Tokens
 
-```bash
-# Interactive setup (recommended)
-oktamcp init
+### 2. Add to Cursor
 
-# Follow the prompts:
-# - Enter your Okta domain (e.g., dev-123456.okta.com)
-# - Enter your Okta API token
-# - Credentials are validated and stored securely
-```
-
-### Step 3: Getting Your Okta API Token
-
-1. Log in to your Okta Admin console
-2. Go to **Security** > **API** > **Tokens**
-3. Click **Create Token**
-4. Give it a name (e.g., "MCP Server Token")
-5. Click **Create Token**
-6. Copy the token value (you won't be able to see it again!)
-
-### Step 4: Verify Setup
-
-```bash
-# Check your authentication status
-oktamcp session
-
-# Test the server
-oktamcp run
-```
-
-## Usage
-
-### With Cursor IDE
-
-After running `oktamcp init`, add this to your `~/.cursor/mcp.json`:
+Add to your `~/.cursor/mcp.json`:
 
 ```json
 {
   "mcpServers": {
     "okta-admin": {
-      "command": "npx",
-      "args": ["-y", "oktamcp", "run"]
+      "command": "npx", 
+      "args": ["-y", "@indranilokg/okta-mcp-server", "run"]
     }
   }
 }
 ```
 
-**No credentials needed in mcp.json!** 🔒 Credentials are stored securely and loaded automatically.
+### 3. Start Using
 
-### Command Line Options
+Restart Cursor and use Okta tools in your chats!
+
+## Commands
 
 ```bash
-# Initial setup (interactive)
-oktamcp init
+# Initial setup
+npx @indranilokg/okta-mcp-server init
 
-# Start in stdio mode (default)
-oktamcp run
+# Check authentication status  
+npx @indranilokg/okta-mcp-server session
 
-# Start in SSE mode for web interfaces
-oktamcp run --sse
+# Start server (for MCP)
+npx @indranilokg/okta-mcp-server run
 
-# Check authentication status
-oktamcp session
-
-# Clear stored credentials
-oktamcp logout
-
-# Show help
-oktamcp --help
+# Clear credentials
+npx @indranilokg/okta-mcp-server logout
 ```
 
 ## Available Tools
 
-- `create_application` - Create OIDC applications (native, web, SPA, service)
-- `list_all_applications` - List all applications in your Okta org
-- `list_groups` - List groups in your Okta org  
-- `assign_application_to_group` - Assign an application to a group
+- `create_application` - Create OIDC applications
+- `list_all_applications` - List all applications
+- `list_groups` - List groups  
+- `assign_application_to_group` - Assign app to group
 
-## Examples
+## Usage Examples
 
-### Create a Web Application
-```javascript
-{
-  "name": "oidc_client",
-  "label": "My Web App",
-  "signOnMode": "OPENID_CONNECT", 
-  "applicationType": "web",
-  "redirectUris": ["https://localhost:3000/callback"],
-  "postLogoutRedirectUris": ["https://localhost:3000"]
-}
-```
+Just chat with Cursor using natural language prompts:
 
-### Create a Native Mobile App
-```javascript
-{
-  "name": "oidc_client",
-  "label": "My Mobile App",
-  "signOnMode": "OPENID_CONNECT",
-  "applicationType": "native", 
-  "redirectUris": ["com.example.app://callback"]
-}
-```
+### Create Applications
 
-### Assign App to All Users
-```javascript
-// First create the app, then assign to Everyone group
-{
-  "appId": "0oa...",
-  "groupId": "00g1rsjefyoO9VfxX1d7" // Everyone group
-}
-```
+**"Create a React SPA application running at port 3000 and assign to all Okta users"**
 
-## Development
+**"Create a web application called 'My Dashboard' with callback URL https://localhost:8080/auth/callback"**
 
-### Local Development
+**"Create a native mobile app for iOS with custom URL scheme com.mycompany.app://callback"**
+
+**"Create a service application for API access called 'Backend Service'"**
+
+### List and Manage
+
+**"Show me all applications in my Okta org"**
+
+**"List all groups in Okta"**
+
+**"Assign the 'My Dashboard' application to the Marketing team group"**
+
+**"Create a new SPA for Vue.js development and make it available to everyone"**
+
+## Security
+
+Credentials are stored securely using:
+1. **OS Keychain** (preferred) - macOS Keychain, Windows Credential Manager, Linux keyring
+2. **Secure file** (fallback) - `~/.okta-mcp/config.json` with restricted permissions  
+3. **Environment variables** (last resort) - `OKTA_DOMAIN` and `OKTA_API_KEY`
+
+## Getting Okta API Token
+
+1. Log in to Okta Admin console
+2. Go to **Security → API → Tokens**
+3. Click **Create Token**
+4. Name it (e.g., "MCP Server") and create
+5. Copy the token immediately (you won't see it again!)
+
+## Troubleshooting
+
 ```bash
-git clone https://github.com/indranilokg/okta-mcp-server.git
-cd okta-mcp-server
-npm install
-npm start
+# Check if authenticated
+npx @indranilokg/okta-mcp-server session
+
+# Re-authenticate  
+npx @indranilokg/okta-mcp-server logout
+npx @indranilokg/okta-mcp-server init
+
+# Test server manually
+npx @indranilokg/okta-mcp-server run
 ```
-
-### Testing with SSE
-```bash
-npm run start:sse
-# Server will be available at http://localhost:3000/sse
-```
-
-## 🔒 Security
-
-The Okta MCP Server prioritizes security with enterprise-grade credential management using a three-tier approach:
-
-### **Three-Tier Security Model**
-1. **🔑 Keychain (Preferred)**: OS-level encrypted credential store
-   - **macOS**: Keychain Access (encrypted with your login keychain)
-   - **Windows**: Windows Credential Manager (encrypted with DPAPI)
-   - **Linux**: libsecret/keyring (encrypted with login credentials)
-
-2. **📁 Secure File (Fallback)**: File with restricted permissions
-   - **Location**: `~/.okta-mcp/config.json`
-   - **Permissions**: 0o600 (owner read/write only)
-   - **Hidden directory**: Starts with `.` to hide from casual browsing
-
-3. **🌍 Environment Variables (Last Resort)**: Always available but least secure
-   - **OKTA_DOMAIN** and **OKTA_API_KEY**
-   - Used when keychain and file storage fail
-
-### **Automatic Fallback Chain**
-The server automatically tries storage methods in order of security:
-```
-Keychain → Secure File → Environment Variables
-```
-- **Zero Configuration**: No manual selection needed
-- **Cross-Platform**: Works on all systems regardless of keychain availability
-- **Graceful Degradation**: Always finds a working storage method
-
-### **Auth0-Style Experience**
-Similar to Auth0 MCP Server:
-- ✅ **Clean Configuration**: No credentials in `mcp.json`
-- ✅ **Session Management**: `init`, `session`, `logout` commands  
-- ✅ **Automatic Validation**: Credentials tested during setup
-- ✅ **Fallback Support**: Environment variables as backup
-
-### **Security Commands**
-```bash
-# Secure setup (stores in keychain)
-oktamcp init
-
-# Check session and credential validity
-oktamcp session
-
-# Securely clear credentials from keychain
-oktamcp logout
-```
-
-### **Credential Flow**
-1. **Setup**: `oktamcp init` → Tries keychain first, falls back to secure file
-2. **Runtime**: Server automatically retrieves using fallback chain (keychain → file → env)
-3. **Cleanup**: `oktamcp logout` → Clears from all storage locations
-
-### **Storage Location Examples**
-- **Keychain**: OS credential store (invisible to user)
-- **File**: `~/.okta-mcp/config.json` (permissions: 600, hidden directory)
-- **Environment**: `OKTA_DOMAIN` and `OKTA_API_KEY` variables
-
-**Automatic Behavior**: The server intelligently chooses the most secure available method and provides clear feedback about which storage is being used.
 
 ## License
 
 MIT
-
-## Contributing
-
-Please read our contributing guidelines and submit pull requests to help improve this project.
