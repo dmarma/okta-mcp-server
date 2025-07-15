@@ -9,3 +9,9 @@ node_modules/
 
 # Package testing files
 *.tgz
+
+# macOS system files
+.DS_Store
+
+# Generated OpenAPI server folder
+openapi-mcp-server-generator/
