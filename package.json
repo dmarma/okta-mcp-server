@@ -47,6 +47,9 @@
     "url": "https://github.com/indranilokg/okta-mcp-server/issues"
   },
   "homepage": "https://github.com/indranilokg/okta-mcp-server#readme",
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/"
+  },
   "files": [
     "mcpServer.js",
     "lib/",

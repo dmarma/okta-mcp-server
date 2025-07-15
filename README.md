@@ -1,5 +1,8 @@
 # Okta MCP Server
 
+[![npm version](https://badge.fury.io/js/@indranilokg%2Fokta-mcp-server.svg)](https://badge.fury.io/js/@indranilokg%2Fokta-mcp-server)
+[![npm downloads](https://img.shields.io/npm/dm/@indranilokg/okta-mcp-server.svg)](https://www.npmjs.com/package/@indranilokg/okta-mcp-server)
+
 A Model Context Protocol (MCP) server for managing Okta platform.
 
 ## Quick Start
