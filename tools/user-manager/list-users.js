@@ -7,8 +7,6 @@
  * @param {number} [args.limit=200] - Number of results per page (max 200).
  * @param {string} [args.filter] - Advanced filter expression (e.g., 'status eq "ACTIVE"').
  * @param {string} [args.search] - SCIM-compliant search expression.
- * @param {string} [args.sortBy] - Field to sort by (e.g., 'lastUpdated', 'email', 'status').
- * @param {string} [args.sortOrder] - Sort order: 'asc' or 'desc'.
  * @returns {Promise<Object>} - The result of the user listing.
  */
 const executeFunction = async ({ 
@@ -16,15 +14,12 @@ const executeFunction = async ({
   after, 
   limit = 200, 
   filter, 
-  search, 
-  sortBy, 
-  sortOrder 
+  search
 }) => {
   console.log('=== LIST USERS DEBUG ===');
   console.log('Search query (q):', q);
   console.log('Filter expression:', filter);
   console.log('Limit:', limit);
-  console.log('Sort by:', sortBy, sortOrder);
   console.log('========================');
 
   // Import credentials helper from manual server
@@ -57,13 +52,6 @@ const executeFunction = async ({
     if (search) {
       url.searchParams.append('search', search);
       console.log(`SCIM search: ${search}`);
-    }
-    
-    if (sortBy) {
-      url.searchParams.append('sortBy', sortBy);
-      if (sortOrder && ['asc', 'desc'].includes(sortOrder.toLowerCase())) {
-        url.searchParams.append('sortOrder', sortOrder.toLowerCase());
-      }
     }
 
     console.log(`Fetching users from: ${url.pathname}${url.search}`);
@@ -154,7 +142,7 @@ const apiTool = {
     type: 'function',
     function: {
       name: 'list_users',
-      description: 'List users in an Okta organization with advanced filtering, search, and pagination capabilities. Supports quick search, SCIM filters, and sorting.',
+      description: 'List users in an Okta organization with advanced filtering, search, and pagination capabilities. Supports quick search and SCIM filters.',
       parameters: {
         type: 'object',
         properties: {
@@ -180,16 +168,6 @@ const apiTool = {
           search: {
             type: 'string',
             description: 'SCIM-compliant search expression for complex queries'
-          },
-          sortBy: {
-            type: 'string',
-            description: 'Field to sort by',
-            enum: ['id', 'status', 'created', 'activated', 'lastUpdated', 'lastLogin', 'profile.login', 'profile.email', 'profile.firstName', 'profile.lastName']
-          },
-          sortOrder: {
-            type: 'string',
-            description: 'Sort order',
-            enum: ['asc', 'desc']
           }
         },
         required: []

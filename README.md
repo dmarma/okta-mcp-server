@@ -55,65 +55,11 @@ npx @indranilokg/okta-mcp-server logout
 
 ## Available Tools
 
-### Application Manager
-| Tool | Description |
-|------|-------------|
-| `create_application` | Create OIDC applications (web, SPA, native, service) with auto-configuration |
-| `list_all_applications` | List all applications with filtering, search, and pagination |
-
-### Group Manager
-| Tool | Description |
-|------|-------------|
-| `list_groups` | List groups with search, filtering, and pagination |
-| `assign_application_to_group` | Assign applications to groups with priority settings |
-
-### User Manager
-| Tool | Description |
-|------|-------------|
-| `list_users` | List users with advanced filtering, search, and activity insights |
-| `create_user` | Create new users with comprehensive profile setup and validation |
-| `get_user` | Get detailed user information with activity insights and status |
-| `update_user` | Update user profiles with change tracking and validation |
-| `activate_user` | Activate user accounts with optional email notifications |
-| `deactivate_user` | Deactivate user accounts with status validation |
+See [TOOLS](./TOOLS.md) for a complete, categorized list of all available tools and their descriptions.
 
 ## Usage Examples
 
-Just chat with Cursor using natural language prompts:
-
-### Create Applications
-
-**"Create a React SPA application running at port 3000 and assign to all Okta users"**
-
-**"Create a web application called 'My Dashboard' with callback URL https://localhost:8080/auth/callback"**
-
-**"Create a native mobile app for iOS with custom URL scheme com.mycompany.app://callback"**
-
-**"Create a service application for API access called 'Backend Service'"**
-
-### List and Manage
-
-**"Show me all applications in my Okta org"**
-
-**"List all groups in Okta"**
-
-**"Assign the 'My Dashboard' application to the Marketing team group"**
-
-**"Create a new SPA for Vue.js development and make it available to everyone"**
-
-### User Management
-
-**"List all active users in my Okta org"**
-
-**"Create a new user for john.doe@company.com with first name John and last name Doe"**
-
-**"Get details for user john.doe@company.com including their activity status"**
-
-**"Update user profile for jane.smith@company.com to change her department to Marketing"**
-
-**"Activate the user account for new.employee@company.com and send welcome email"**
-
-**"Deactivate user account for former.employee@company.com"**
+See [EXAMPLES](./EXAMPLES.md) for practical usage examples for all major tool categories (Application, Group, User).
 
 ## Security
 

@@ -15,26 +15,20 @@
  * @param {Object} [args.credentials] - User credentials.
  * @param {Object} [args.credentials.password] - Password information.
  * @param {string} [args.credentials.password.value] - Plain text password.
- * @param {Array<string>} [args.groupIds] - List of group IDs to assign the user to.
  * @param {boolean} [args.activate=true] - Whether to activate the user immediately.
- * @param {string} [args.provider] - Authentication provider (OKTA, ACTIVE_DIRECTORY, etc.).
  * @param {string} [args.nextLogin] - Next login behavior (changePassword, etc.).
  * @returns {Promise<Object>} - The result of the user creation.
  */
 const executeFunction = async ({ 
   profile,
   credentials,
-  groupIds,
   activate = true,
-  provider,
   nextLogin
 }) => {
   console.log('=== CREATE USER DEBUG ===');
   console.log('Profile:', profile);
   console.log('Has credentials:', !!credentials);
-  console.log('Group IDs:', groupIds);
   console.log('Activate:', activate);
-  console.log('Provider:', provider);
   console.log('=========================');
 
   // Import credentials helper from manual server
@@ -100,19 +94,9 @@ const executeFunction = async ({
         console.log('Including password credentials');
       }
 
-      if (credentials.provider) {
-        requestBody.credentials.provider = credentials.provider;
-      }
-
       if (credentials.recovery_question) {
         requestBody.credentials.recovery_question = credentials.recovery_question;
       }
-    }
-
-    // Add group memberships if provided
-    if (groupIds && Array.isArray(groupIds) && groupIds.length > 0) {
-      requestBody.groupIds = groupIds;
-      console.log(`Assigning user to ${groupIds.length} groups`);
     }
 
     // Build URL with query parameters
@@ -120,10 +104,6 @@ const executeFunction = async ({
     
     // Set activation behavior
     url.searchParams.append('activate', activate.toString());
-    
-    if (provider) {
-      url.searchParams.append('provider', provider);
-    }
     
     if (nextLogin) {
       url.searchParams.append('nextLogin', nextLogin);
@@ -222,7 +202,7 @@ const apiTool = {
     type: 'function',
     function: {
       name: 'create_user',
-      description: 'Create a new user in Okta with comprehensive profile information, optional credentials, and group assignments. Supports automatic activation and provider selection.',
+      description: 'Create a new user in Okta with comprehensive profile information and optional credentials. Supports automatic activation.',
       parameters: {
         type: 'object',
         properties: {
@@ -305,21 +285,6 @@ const apiTool = {
                 },
                 required: ['value']
               },
-              provider: {
-                type: 'object',
-                description: 'Authentication provider information',
-                properties: {
-                  type: {
-                    type: 'string',
-                    enum: ['OKTA', 'ACTIVE_DIRECTORY', 'LDAP', 'FEDERATION', 'SOCIAL', 'IMPORT'],
-                    description: 'Provider type'
-                  },
-                  name: {
-                    type: 'string',
-                    description: 'Provider name'
-                  }
-                }
-              },
               recovery_question: {
                 type: 'object',
                 description: 'Security question for password recovery',
@@ -337,22 +302,10 @@ const apiTool = {
               }
             }
           },
-          groupIds: {
-            type: 'array',
-            items: {
-              type: 'string'
-            },
-            description: 'Array of group IDs to assign the user to immediately upon creation'
-          },
           activate: {
             type: 'boolean',
             description: 'Whether to activate the user immediately (default: true)',
             default: true
-          },
-          provider: {
-            type: 'string',
-            description: 'Authentication provider for the user',
-            enum: ['OKTA', 'ACTIVE_DIRECTORY', 'LDAP', 'FEDERATION', 'SOCIAL', 'IMPORT']
           },
           nextLogin: {
             type: 'string',

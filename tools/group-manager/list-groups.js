@@ -6,9 +6,8 @@
  * @param {string} [args.filter] - Filter expression for groups.
  * @param {string} [args.after] - The pagination cursor for the next page of results.
  * @param {number} [args.limit=200] - The number of results per page.
- * @param {string} [args.sortBy] - The field to sort by.
- * @param {string} [args.sortOrder] - The sort order (asc or desc).
  * @param {string} [args.expand] - An optional parameter for expanding group details.
+ * @param {string} [args.search] - SCIM-style search expression for advanced filtering.
  * @returns {Promise<Object>} - The result of the group listing.
  */
 const executeFunction = async ({ 
@@ -16,9 +15,8 @@ const executeFunction = async ({
   filter, 
   after, 
   limit = 200, 
-  sortBy, 
-  sortOrder, 
-  expand 
+  expand, 
+  search
 }) => {
   // Import credentials helper
   const { getOktaCredentials } = await import('../../lib/tools.js');
@@ -32,9 +30,8 @@ const executeFunction = async ({
     if (filter) url.searchParams.append('filter', filter);
     if (after) url.searchParams.append('after', after);
     url.searchParams.append('limit', limit.toString());
-    if (sortBy) url.searchParams.append('sortBy', sortBy);
-    if (sortOrder) url.searchParams.append('sortOrder', sortOrder);
     if (expand) url.searchParams.append('expand', expand);
+    if (search) url.searchParams.append('search', search);
 
     // Set up headers for the request
     const headers = {
@@ -111,18 +108,13 @@ const apiTool = {
             description: 'The number of results per page.',
             default: 200
           },
-          sortBy: {
-            type: 'string',
-            description: 'The field to sort by.'
-          },
-          sortOrder: {
-            type: 'string',
-            description: 'The sort order (asc or desc).',
-            enum: ['asc', 'desc']
-          },
           expand: {
             type: 'string',
             description: 'An optional parameter for expanding group details.'
+          },
+          search: {
+            type: 'string',
+            description: 'SCIM-style search expression for advanced filtering.'
           }
         },
         required: []

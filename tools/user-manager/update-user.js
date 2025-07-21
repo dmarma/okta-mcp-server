@@ -5,20 +5,17 @@
  * @param {string} args.userId - User ID, login, or email to update.
  * @param {Object} args.profile - Profile fields to update.
  * @param {Object} [args.credentials] - Credentials to update (optional).
- * @param {boolean} [args.strict=false] - Whether to use strict update semantics.
  * @returns {Promise<Object>} - The updated user information.
  */
 const executeFunction = async ({ 
   userId, 
   profile,
-  credentials,
-  strict = false
+  credentials
 }) => {
   console.log('=== UPDATE USER DEBUG ===');
   console.log('User ID/Login:', userId);
   console.log('Profile updates:', profile);
   console.log('Has credentials:', !!credentials);
-  console.log('Strict mode:', strict);
   console.log('==========================');
 
   // Import credentials helper from manual server
@@ -96,9 +93,6 @@ const executeFunction = async ({
 
     // Build URL with query parameters
     const url = new URL(`${baseUrl}/api/v1/users/${encodeURIComponent(userId)}`);
-    if (strict) {
-      url.searchParams.append('strict', 'true');
-    }
 
     console.log('Updating user with request body:', JSON.stringify(updateBody, null, 2));
 
@@ -188,8 +182,7 @@ const executeFunction = async ({
       _links: updatedUser._links,
       updateSummary: {
         changedFields: changedFields,
-        totalChanges: changedFields.length,
-        strictMode: strict
+        totalChanges: changedFields.length
       },
       message: `User '${updatedUser.profile.login}' updated successfully. ${changedFields.length} field(s) changed: ${changedFields.join(', ')}`
     };
@@ -372,11 +365,6 @@ const apiTool = {
                 required: ['question', 'answer']
               }
             }
-          },
-          strict: {
-            type: 'boolean',
-            description: 'Whether to use strict update semantics (default: false)',
-            default: false
           }
         },
         required: ['userId']
