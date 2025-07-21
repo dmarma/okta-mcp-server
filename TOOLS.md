@@ -32,6 +32,6 @@
 ## Policy Manager
 | Tool | Description |
 |------|-------------|
-| `list-policy-mappings` | List all resources (applications) mapped to a policy |
-| `assign-policy-to-app` | Assign a policy to an application |
-| `remove-policy-mapping` | Remove a resource mapping (unassign a policy from an app) | 
+| `list_policies` | List policies in Okta. |
+| `list_policy_mappings` | List all resources (applications) mapped to a policy |
+| `assign_policy_to_app` | Assign a policy to an application | 

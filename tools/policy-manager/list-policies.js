@@ -9,11 +9,37 @@
  * @returns {Promise<Object>} - The result of the listing.
  */
 const executeFunction = async ({ type, status, q }) => {
+  // Map common prompt terms to Okta policy types
+  const typeMap = {
+    'app policy': 'ACCESS_POLICY',
+    'application policy': 'ACCESS_POLICY',
+    'access policy': 'ACCESS_POLICY',
+    'global policy': 'OKTA_SIGN_ON',
+    'sign on policy': 'OKTA_SIGN_ON',
+    'okta sign on': 'OKTA_SIGN_ON',
+    'password policy': 'PASSWORD',
+    'mfa enroll': 'MFA_ENROLL',
+    'idp discovery': 'IDP_DISCOVERY',
+    'profile enrollment': 'PROFILE_ENROLLMENT',
+    'post auth session': 'POST_AUTH_SESSION',
+    'entity risk': 'ENTITY_RISK'
+  };
+  let resolvedType = type;
+  if (type && typeof type === 'string') {
+    const normalized = type.trim().toLowerCase();
+    if (typeMap[normalized]) {
+      resolvedType = typeMap[normalized];
+    }
+  }
+  // Default to ACCESS_POLICY if not specified
+  if (!resolvedType) {
+    resolvedType = 'ACCESS_POLICY';
+  }
   const { getOktaCredentials } = await import('../../lib/tools.js');
   const { domain, apiToken } = await getOktaCredentials();
   const baseUrl = `https://${domain}`;
   const url = new URL(`${baseUrl}/api/v1/policies`);
-  if (type) url.searchParams.append('type', type);
+  if (resolvedType) url.searchParams.append('type', resolvedType);
   if (status) url.searchParams.append('status', status);
   if (q) url.searchParams.append('q', q);
   const response = await fetch(url.toString(), {
