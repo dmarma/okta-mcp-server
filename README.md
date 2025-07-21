@@ -18,14 +18,14 @@ You'll be prompted for:
 - **Okta Domain**: `your-domain.okta.com` (or `.oktapreview.com`)
 - **API Token**: Get from Okta Admin → Security → API → Tokens
 
-### 2. Add to Cursor
+### 2. Add to your MCP Client (e.g., Claude Desktop, Windsurf, Cursor, etc.)
 
-Add to your `~/.cursor/mcp.json`:
+Add to your MCP client configuration:
 
 ```json
 {
   "mcpServers": {
-    "okta-admin": {
+    "okta": {
       "command": "npx", 
       "args": ["-y", "@indranilokg/okta-mcp-server", "run"]
     }
@@ -35,7 +35,7 @@ Add to your `~/.cursor/mcp.json`:
 
 ### 3. Start Using
 
-Restart Cursor and use Okta tools in your chats!
+Restart your MCP client and use Okta tools in your chats!
 
 ## Commands
 
